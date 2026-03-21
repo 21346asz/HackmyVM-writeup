@@ -153,9 +153,6 @@ unzip -l data.zip
 
 # 3. 解压到指定目录
 unzip data.zip -d /tmp/output
-
-# 4. 解压单个文件
-unzip data.zip file.txt
 ```
 
 关卡说明：用户 **isla** 把她的密码留在了一个 **zip 压缩包** 里。
