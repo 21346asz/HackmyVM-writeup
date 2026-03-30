@@ -428,3 +428,163 @@ Finished
 ```
 
 是真的很快。
+
+## john
+
+是一款常见的**密码审计/密码恢复工具**。它的核心用途是：对你**有授权**的密码哈希做安全检查，看看弱密码是否容易被猜出来。
+
+**它能做什么**
+
+- 跑字典攻击
+- 基于规则变形字典词
+- 掩码攻击
+- 暴力枚举
+- 支持很多哈希/文件格式
+
+查看支持的格式：
+
+```bash
+john --list=formats 
+```
+
+查看帮助：
+
+```shell
+john --help 
+```
+
+用字典跑哈希文件：
+
+```shell
+john --wordlist=rockyou.txt hash.txt 
+```
+
+指定格式：
+
+```shell
+john --format=raw-md5 --wordlist=rockyou.txt hash.txt 
+```
+
+字典 + 规则变形：
+
+```shell
+john --wordlist=rockyou.txt --rules hash.txt 
+```
+
+增量/暴力模式：
+
+```shell
+john --incremental hash.txt 
+```
+
+掩码模式：
+
+```shell
+john --mask='?l?l?l?l?d?d' hash.txt 
+```
+
+常见掩码符号：
+
+- ?l 小写字母
+- ?u 大写字母
+- ?d 数字
+- ?s 符号
+- ?a 任意字符
+
+**你可以这样理解几种模式**
+
+- --wordlist：最快，先试常见密码
+- --rules：把字典词做变形，比如加年份、首字母大写
+- --mask：已知密码结构时很好用
+- --incremental：最慢，但覆盖更广
+
+查看已破解结果：
+
+```shell
+john --show hash.txt 
+```
+
+查看运行状态：
+
+```shell
+john --status 
+```
+
+保存会话名：
+
+```shell
+john --session=test1 --wordlist=rockyou.txt hash.txt 
+```
+
+恢复中断任务：
+
+```shell
+john --restore=test1 
+```
+
+只针对某个用户：
+
+```shell
+john --users=alice shadow.txt 
+```
+
+多进程：
+
+```shell
+john --fork=4 hash.txt
+```
+
+**常见“提取哈希”工具**
+很多压缩包、文档、密钥文件不能直接喂给 john，要先转：
+
+ZIP：
+
+```shell
+zip2john file.zip > zip.hash 
+john zip.hash 
+```
+
+RAR：
+
+```shell
+rar2john file.rar > rar.hash 
+john rar.hash 
+```
+
+SSH 私钥：
+
+```shell
+ssh2john id_rsa > ssh.hash 
+john ssh.hash 
+```
+
+KeePass：
+
+```shell
+keepass2john vault.kdbx > kp.hash 
+john kp.hash
+```
+
+可以通过这个工具实现自动化：
+
+```shell
+root@kali:/home/warn/Desktop# ssh2john rsa > rsa.hash           
+                                                                                                         
+root@kali:/home/warn/Desktop# john --wordlist=./password2.txt rsa.hash
+Using default input encoding: UTF-8
+Loaded 1 password hash (SSH, SSH private key [RSA/DSA/EC/OPENSSH 32/64])
+Cost 1 (KDF/cipher [0=MD5/AES 1=MD5/3DES 2=Bcrypt/AES]) is 2 for all loaded hashes
+Cost 2 (iteration count) is 16 for all loaded hashes
+Will run 4 OpenMP threads
+Press 'q' or Ctrl-C to abort, almost any other key for status
+aWxvdmV5b3UK     (rsa)     
+1g 0:00:00:00 DONE (2026-03-27 22:38) 3.448g/s 27.58p/s 27.58c/s 27.58C/s ..Cg==
+Use the "--show" option to display all of the cracked passwords reliably
+Session completed. 
+                                                                                                         
+root@kali:/home/warn/Desktop# john --show rsa.hash                    
+rsa:aWxvdmV5b3UK
+
+1 password hash cracked, 0 left
+```
+
