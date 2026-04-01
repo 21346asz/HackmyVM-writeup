@@ -2642,3 +2642,78 @@ file 'part3.mp4'
 
 ## level41
 
+```shell
+leda@hades:~$ ls -al
+total 32
+drwxr-x--- 2 root leda 4096 Apr  5  2024 .
+drwxr-xr-x 1 root root 4096 Apr  5  2024 ..
+-rw-r--r-- 1 leda leda  220 Apr 23  2023 .bash_logout
+-rw-r--r-- 1 leda leda 3526 Apr 23  2023 .bashrc
+-rw-r--r-- 1 leda leda  807 Apr 23  2023 .profile
+-rw-r----- 1 root leda   22 Apr  5  2024 flagz.txt
+-rw-r----- 1 root leda  129 Apr  5  2024 mission.txt
+leda@hades:~$ cat flagze.txt
+cat: flagze.txt: No such file or directory
+leda@hades:~$ cat flagz.txt
+^wHseqgzsZUNyruSnxnl^
+leda@hades:~$ cat mission.txt
+################
+# MISSION 0x41 #
+################
+
+## EN ##
+User maia hears everything.
+
+## ES ##
+La usuaria maia lo oye todo.
+leda@hades:~$ sudo -l
+Matching Defaults entries for leda on hades:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin, use_pty
+
+User leda may run the following commands on hades:
+    (maia) NOPASSWD: /usr/bin/espeak
+    
+    # https://gtfobins.org/gtfobins/espeak/#file-read
+leda@hades:/tmp/123$ sudo -u maia /usr/bin/espeak -qXf /pwned/maia/flagz.txt
+Translate '^'
+Found: '_^' [s3:kVmfl,Eks]
+Found: 'g' [dZi:]
+Unpronouncable? 'ws'
+Found: 'w' [d'Vb@Lju:]
+Found: '_s' [E2s]
+Unpronouncable? 'dbt'
+Found: 'd' [di:]
+Found: 'b' [bi:]
+Found: 't' [ti:]
+Translate 'ci'
+  1     c        [k]
+ 22     c (i     [s]
+
+ 22     i (_     [i]
+  1     i        [I]
+ 44     XC) i (_ [aI]
+ 43     c) i (_  [aI]
+
+Unpronouncable? 'xd'
+Found: 'x' [E2ks]
+Found: 'd' [di:]
+Unpronouncable? 'zd'
+Found: 'z' [zE2d]
+Found: 'd' [di:]
+Unpronouncable? 'nt'
+Found: 'n' [E2n]
+Found: 't' [ti:]
+Unpronouncable? 'rz'
+Found: 'r' [A@]
+Found: 'z' [zE2d]
+Unpronouncable? 'vgt'
+Found: 'v' [vi:]
+Found: 'g' [dZi:]
+Found: 't' [ti:]
+Translate '^'
+Found: '_^' [s3:kVmfl,Eks]
+ dZ'i: d,Vb@Lj,u:'Es d,i:b,i:t'i: s'aI ,Eksd'i: z,Edd'i:; ,Ent'i:; ,A@z'Ed v,i:dZ,i:t'i:
+ # ^gwsdbtcixdzdntrzvgt^
+```
+
+## level42
