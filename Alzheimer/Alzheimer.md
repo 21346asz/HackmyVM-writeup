@@ -262,7 +262,7 @@ medusa@alzheimer:~$ cat user.txt
 HMVrespectmemories
 ```
 
-我们下载要拿到root用户的root.txt。
+我们接下来要拿到root用户的root.txt。
 
 ## 提权
 
