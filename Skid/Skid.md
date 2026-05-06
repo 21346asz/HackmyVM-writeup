@@ -875,7 +875,7 @@ root@skid:~# cat /home/jeremy/user.txt
 hmv{7609a0e2e5bf27260[hidden]
 ```
 
-这只是方法1，`sudo` 的特权提升这里并没有使用，我将放到下一个markdown文件里面，里面也有一些我不知道的特殊方法，值得我去学习。
+这只是方法1，`sudo` 的特权提升这里并没有使用，我将放到下一个markdown文件里面。
 
 ## 攻击链总结
 
