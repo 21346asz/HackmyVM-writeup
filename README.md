@@ -54,5 +54,8 @@ This repository is used to document my HackmyVM practice workflow, including enu
 	|-- machine
 		|-- machine.md
 		|-- machine
+|-- hades
+|-- venus.md
 ```
 
+正在完善中...... 

